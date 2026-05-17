@@ -6,6 +6,7 @@
   "scripts": {
     "test:e2e": "playwright test",
     "test:api": "newman run api/contalink-api.postman_collection.json -e api/contalink-api.postman_environment.json --env-var baseUrl=https://candidates-api.contalink.com --env-var accessCode=$ACCESS_CODE",
+    "test:performance": "k6 run performance/invoices.k6.js",
     "test": "npm run test:e2e && npm run test:api",
     "typecheck": "tsc --noEmit"
   },

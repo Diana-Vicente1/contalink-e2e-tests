@@ -14,6 +14,7 @@ This project includes:
 
 - E2E tests with **Playwright + TypeScript**
 - API tests with **Postman + Newman**
+- Optional smoke performance test with **k6**
 - Page Object Model
 - Dynamic test data
 - GitHub Actions CI pipeline
@@ -27,6 +28,7 @@ This project includes:
 - Node.js
 - Postman
 - Newman
+- k6
 - Page Object Model
 - Playwright HTML Report
 - GitHub Actions
@@ -50,6 +52,9 @@ contalink-e2e-tests/
 │   ├── LoginPage.ts
 │   └── InvoicePage.ts
 │
+├── performance/
+│   └── invoices.k6.js
+│
 ├── test-data/
 │   └── invoice.data.ts
 │
@@ -69,7 +74,7 @@ contalink-e2e-tests/
 
 ## Test Coverage
 
-The current automation suite covers the main user flows of the application through E2E tests and validates the invoice API through Postman/Newman tests.
+The current automation suite covers the main user flows of the application through E2E tests, validates the invoice API through Postman/Newman tests, and includes an optional k6 smoke performance test.
 
 ---
 
@@ -113,7 +118,40 @@ The API suite covers the following endpoints and scenarios:
 | Invalid invoice total | POST | `/V1/invoices` | `400` or `422` |
 | Missing authorization | GET | `/V1/invoices` | `401 Unauthorized` |
 
-The collection creates a dynamic invoice first and stores its `invoiceId` and `invoiceNumber` as environment variables. These values are reused by the GET, PUT, PATCH, and DELETE requests.
+The collection creates a dynamic invoice first and stores its `invoiceId` and `invoiceNumber` as environment variables. These values are reused by the GET, PUT, PATCH, DELETE, and deleted-invoice validation requests.
+
+---
+
+## Optional Performance Test
+
+A basic k6 smoke performance test is included in:
+
+```text
+performance/invoices.k6.js
+```
+
+The test targets the read-only endpoint:
+
+```text
+GET /V1/invoices
+```
+
+Load profile:
+
+```text
+20 requests per second for 30 seconds
+```
+
+Thresholds:
+
+```text
+http_req_failed < 1%
+p95 response time < 1000 ms
+```
+
+This test is intentionally focused on a read-only endpoint to avoid creating, updating, or deleting data in the shared QA environment.
+
+The performance test is not part of the main CI pipeline because performance results can be affected by network conditions, shared environment load, and external factors. It is provided as an optional manual smoke performance check.
 
 ---
 
@@ -318,6 +356,18 @@ Then add the access code value:
 ACCESS_CODE=your_access_code_here
 ```
 
+To run the optional performance test locally, install k6 first:
+
+```bash
+brew install k6
+```
+
+Validate the installation:
+
+```bash
+k6 version
+```
+
 ---
 
 ## Running Tests
@@ -391,13 +441,39 @@ The access code is passed as an environment variable and is not stored in the ex
 
 ---
 
-### Run All Tests
+### Run Optional Performance Test
+
+Run the k6 smoke performance test:
+
+```bash
+ACCESS_CODE='your_access_code_here' npm run test:performance
+```
+
+The test executes:
+
+```text
+GET /V1/invoices
+```
+
+with:
+
+```text
+20 requests per second for 30 seconds
+```
+
+This performance test is optional and is not included in the main CI pipeline.
+
+---
+
+### Run All Functional Tests
 
 Run E2E and API tests:
 
 ```bash
 ACCESS_CODE='your_access_code_here' npm test
 ```
+
+This command does not run the optional performance test.
 
 ---
 
@@ -423,7 +499,27 @@ When running API tests with Newman, the output includes:
 - Average response time
 - Status code validation per request
 
-The API suite currently includes 8 requests and validates both happy path and edge cases.
+The API suite currently includes 9 requests and validates both happy path and edge cases.
+
+---
+
+## k6 Performance Test Output
+
+When running the optional k6 test, the output includes:
+
+- Total HTTP requests
+- Request rate
+- Failed request rate
+- Response time metrics
+- p95 response time
+- Threshold results
+
+The current smoke performance thresholds are:
+
+```text
+http_req_failed rate < 1%
+http_req_duration p95 < 1000 ms
+```
 
 ---
 
@@ -456,6 +552,8 @@ The access code is injected in CI through a GitHub Actions secret:
 ACCESS_CODE
 ```
 
+The optional k6 performance test is not included in the automatic CI pipeline to avoid false negatives caused by environment load, network variability, or external conditions.
+
 ---
 
 ## Test Data
@@ -471,6 +569,8 @@ API invoice data is generated dynamically in the Postman collection using:
 ```text
 {{$timestamp}}
 ```
+
+Performance tests use the existing list endpoint and do not create or modify data.
 
 The access code is provided through environment variables and is not stored in test data files or exported Postman files.
 
@@ -507,6 +607,13 @@ should delete an invoice
 09 - GET invoices without authorization - 401
 ```
 
+### Performance - Invoices
+
+```text
+GET /V1/invoices
+20 requests per second for 30 seconds
+```
+
 ---
 
 ## Future Improvements
@@ -521,7 +628,7 @@ If more time were available, I would add:
 - Session reuse with Playwright `storageState` if the E2E suite grows and login becomes a bottleneck
 - More granular reporting with Allure
 - Newman HTML report generation for API tests
-- Optional performance testing with k6
+- Expand performance coverage with additional k6 scenarios and environment-specific thresholds
 
 ---
 
@@ -532,8 +639,11 @@ The suite is intentionally focused on the most valuable flows for the product:
 - Authentication
 - Invoice CRUD through UI
 - Invoice CRUD and validation through API
+- Basic smoke performance validation for a read-only API endpoint
 - CI execution through GitHub Actions
 
 The tests are designed to be independent, use dynamic data, avoid hard waits, and interact with specific UI sections through scoped locators.
 
 The project does not use fixtures or utility folders yet because the current suite is small. If the project grows, shared setup such as authenticated sessions or reusable data builders could be moved into fixtures or utilities.
+
+A basic k6 smoke performance test is included as an optional check. It is intentionally kept outside the mandatory CI pipeline to avoid false negatives caused by shared environment or network variability.
