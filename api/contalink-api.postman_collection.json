@@ -321,7 +321,7 @@
       "response": []
     },
     {
-      "name": "06-GET invoices - 200",
+      "name": "07-GET invoices - 200",
       "event": [
         {
           "listen": "test",
@@ -395,7 +395,60 @@
       "response": []
     },
     {
-      "name": "07-POST invoice invalid total - 400 or 422",
+      "name": "06 - GET deleted invoice - 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {",
+              "  pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test(\"Response contains not found error\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.have.property(\"error\");",
+              "  pm.expect(json.error).to.include(\"Factura no encontrada\");",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/V1/invoices/{{invoiceId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "V1",
+            "invoices",
+            "{{invoiceId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "08-POST invoice invalid total - 400 or 422",
       "event": [
         {
           "listen": "test",
@@ -443,7 +496,7 @@
       "response": []
     },
     {
-      "name": "08-GET invoices without authorization - 401",
+      "name": "09-GET invoices without authorization - 401",
       "event": [
         {
           "listen": "test",

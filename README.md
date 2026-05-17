@@ -108,6 +108,7 @@ The API suite covers the following endpoints and scenarios:
 | Update invoice | PUT | `/V1/invoices/:id` | `200 OK` |
 | Partial update invoice | PATCH | `/V1/invoices/:id` | `200 OK` |
 | Delete invoice | DELETE | `/V1/invoices/:id` | `200` or `204` |
+| Get deleted invoice | GET | `/V1/invoices/:id` | `404 Not Found` |
 | List invoices | GET | `/V1/invoices` | `200 OK`, empty or non-empty list |
 | Invalid invoice total | POST | `/V1/invoices` | `400` or `422` |
 | Missing authorization | GET | `/V1/invoices` | `401 Unauthorized` |
@@ -500,9 +501,10 @@ should delete an invoice
 03 - PUT invoice - 200
 04 - PATCH invoice - 200
 05 - DELETE invoice - 200 or 204
-06 - GET invoices - 200
-07 - POST invoice invalid total - 400 or 422
-08 - GET invoices without authorization - 401
+06 - GET deleted invoice - 404
+07 - GET invoices - 200
+08 - POST invoice invalid total - 400 or 422
+09 - GET invoices without authorization - 401
 ```
 
 ---
