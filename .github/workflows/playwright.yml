@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: QA Automation Tests
 on:
   push:
     branches: [ main, master ]
@@ -22,9 +22,12 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run TypeScript check
-      run: npx tsc --noEmit
-    - name: Run Playwright tests
-      run: npx playwright test
+      run: npm run typecheck
+    - name: Run E2E tests
+      run: npm run test:e2e
+    - name: Run API tests
+      run: npm run test:api
+
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:

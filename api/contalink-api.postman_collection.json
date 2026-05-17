@@ -1,0 +1,527 @@
+{
+  "info": {
+    "_postman_id": "9ae22c70-bdcb-41e6-bd76-8a97c88a465f",
+    "name": "Contalink API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "14885724"
+  },
+  "item": [
+    {
+      "name": "01-POST invoice - 201",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Response contains invoice id\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.have.property(\"id\");",
+              "  pm.expect(json.id).to.be.a(\"number\");",
+              "",
+              "  pm.environment.set(\"invoiceId\", json.id);",
+              "  pm.environment.set(\"invoiceNumber\", json.invoiceNumber);",
+              "});",
+              "",
+              "pm.test(\"Invoice data is correct\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json.invoiceNumber).to.include(\"API-DVD-\");",
+              "  pm.expect(json.total).to.eql(600.9);",
+              "  pm.expect(json.status).to.eql(\"Pendiente\");",
+              "  pm.expect(json.active).to.eql(true);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"invoice_number\": \"API-DVD-{{$timestamp}}\",\n    \"total\": 600.9,\n    \"invoice_date\": \"16/05/2026 8:20 PM\",\n    \"status\": \"Pendiente\",\n    \"active\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/V1/invoices",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "V1",
+            "invoices"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "02-GET invoice by id - 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response contains the requested invoice\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.have.property(\"id\");",
+              "  pm.expect(json.id).to.eql(Number(pm.environment.get(\"invoiceId\")));",
+              "});",
+              "",
+              "pm.test(\"Invoice number matches the created invoice\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.have.property(\"invoiceNumber\");",
+              "  pm.expect(json.invoiceNumber).to.eql(pm.environment.get(\"invoiceNumber\"));",
+              "});",
+              "",
+              "pm.test(\"Invoice response has expected fields\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.have.property(\"id\");",
+              "  pm.expect(json).to.have.property(\"invoiceNumber\");",
+              "  pm.expect(json).to.have.property(\"total\");",
+              "  pm.expect(json).to.have.property(\"invoiceDate\");",
+              "  pm.expect(json).to.have.property(\"status\");",
+              "  pm.expect(json).to.have.property(\"active\");",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "{{accessCode}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/V1/invoices/{{invoiceId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "V1",
+            "invoices",
+            "{{invoiceId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "03-PUT invoice - 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Invoice was updated\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.have.property(\"id\");",
+              "  pm.expect(json.id).to.eql(Number(pm.environment.get(\"invoiceId\")));",
+              "  pm.expect(json.total).to.eql(2500.75);",
+              "  pm.expect(json.status).to.eql(\"Pagado\");",
+              "  pm.expect(json.invoiceNumber).to.include(\"-PUT\");",
+              "",
+              "  pm.environment.set(\"invoiceNumber\", json.invoiceNumber);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "{{accessCode}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_number\": \"{{invoiceNumber}}-PUT\",\n  \"total\": 2500.75,\n  \"invoice_date\": \"16/05/2026 8:20 PM\",\n  \"status\": \"Pagado\",\n  \"active\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/V1/invoices/{{invoiceId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "V1",
+            "invoices",
+            "{{invoiceId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "04-PATCH invoice - 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Invoice status was partially updated\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.have.property(\"id\");",
+              "  pm.expect(json.id).to.eql(Number(pm.environment.get(\"invoiceId\")));",
+              "  pm.expect(json.status).to.eql(\"Vencido\");",
+              "});",
+              "",
+              "pm.test(\"Invoice keeps expected fields after patch\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.have.property(\"invoiceNumber\");",
+              "  pm.expect(json).to.have.property(\"total\");",
+              "  pm.expect(json).to.have.property(\"invoiceDate\");",
+              "  pm.expect(json).to.have.property(\"active\");",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "{{accessCode}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"Vencido\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/V1/invoices/{{invoiceId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "V1",
+            "invoices",
+            "{{invoiceId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "05-DELETE invoice - 200 or 204",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 or 204\", function () {",
+              "  pm.expect([200, 204]).to.include(pm.response.code);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/V1/invoices/{{invoiceId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "V1",
+            "invoices",
+            "{{invoiceId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "06-GET invoices - 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has invoices and pagination\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.have.property(\"invoices\");",
+              "  pm.expect(json).to.have.property(\"pagination\");",
+              "});",
+              "",
+              "pm.test(\"Invoices is an array\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json.invoices).to.be.an(\"array\");",
+              "});",
+              "",
+              "pm.test(\"Invoices list can be empty or non-empty\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json.invoices.length).to.be.at.least(0);",
+              "});",
+              "",
+              "pm.test(\"Pagination has expected fields\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json.pagination).to.have.property(\"totalPages\");",
+              "  pm.expect(json.pagination).to.have.property(\"currentPage\");",
+              "  pm.expect(json.pagination).to.have.property(\"nextPage\");",
+              "  pm.expect(json.pagination).to.have.property(\"prevPage\");",
+              "});",
+              "",
+              "pm.test(\"If invoices list is not empty, invoice has expected fields\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  if (json.invoices.length > 0) {",
+              "    pm.expect(json.invoices[0]).to.have.property(\"id\");",
+              "    pm.expect(json.invoices[0]).to.have.property(\"invoiceNumber\");",
+              "    pm.expect(json.invoices[0]).to.have.property(\"total\");",
+              "    pm.expect(json.invoices[0]).to.have.property(\"invoiceDate\");",
+              "    pm.expect(json.invoices[0]).to.have.property(\"status\");",
+              "    pm.expect(json.invoices[0]).to.have.property(\"active\");",
+              "  }",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/V1/invoices",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "V1",
+            "invoices"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "07-POST invoice invalid total - 400 or 422",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 or 422\", function () {",
+              "  pm.expect([400, 422]).to.include(pm.response.code);",
+              "});",
+              "",
+              "pm.test(\"Response contains validation error\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.not.be.undefined;",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_number\": \"API-DVD-INVALID-{{$timestamp}}\",\n  \"total\": -100,\n  \"invoice_date\": \"16/05/2026 8:20 PM\",\n  \"status\": \"Pendiente\",\n  \"active\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/V1/invoices",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "V1",
+            "invoices"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "08-GET invoices without authorization - 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 401\", function () {",
+              "  pm.response.to.have.status(401);",
+              "});",
+              "",
+              "pm.test(\"Response contains unauthorized error\", function () {",
+              "  const json = pm.response.json();",
+              "",
+              "  pm.expect(json).to.not.be.undefined;",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/V1/invoices",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "V1",
+            "invoices"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "{{accessCode}}",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "authorization",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

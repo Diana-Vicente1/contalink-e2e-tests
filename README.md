@@ -1,12 +1,22 @@
-# Contalink E2E Tests
+# Contalink QA Automation Tests
 
-End-to-end test automation project for the Contalink QA candidate application.
+QA automation project for the Contalink candidate application.
 
 Application under test:
 
 https://candidates-qa.contalink.com/
 
-This project uses **Playwright** with **TypeScript** and follows a **Page Object Model** approach to keep tests readable, maintainable, and scalable.
+API under test:
+
+https://candidates-api.contalink.com/
+
+This project includes:
+
+- E2E tests with **Playwright + TypeScript**
+- API tests with **Postman + Newman**
+- Page Object Model
+- Dynamic test data
+- GitHub Actions CI pipeline
 
 ---
 
@@ -15,6 +25,8 @@ This project uses **Playwright** with **TypeScript** and follows a **Page Object
 - Playwright
 - TypeScript
 - Node.js
+- Postman
+- Newman
 - Page Object Model
 - Playwright HTML Report
 - GitHub Actions
@@ -29,6 +41,10 @@ contalink-e2e-tests/
 ├── .github/
 │   └── workflows/
 │       └── playwright.yml
+│
+├── api/
+│   ├── contalink-api.postman_collection.json
+│   └── contalink-api.postman_environment.json
 │
 ├── pages/
 │   ├── LoginPage.ts
@@ -53,7 +69,11 @@ contalink-e2e-tests/
 
 ## Test Coverage
 
-The current E2E suite covers the main user flows of the application.
+The current automation suite covers the main user flows of the application through E2E tests and validates the invoice API through Postman/Newman tests.
+
+---
+
+## E2E Test Coverage
 
 ### Authentication
 
@@ -69,11 +89,38 @@ The current E2E suite covers the main user flows of the application.
 
 ---
 
+## API Test Coverage
+
+API tests are located in:
+
+```text
+api/
+├── contalink-api.postman_collection.json
+└── contalink-api.postman_environment.json
+```
+
+The API suite covers the following endpoints and scenarios:
+
+| Scenario | Method | Endpoint | Expected Result |
+|---|---:|---|---|
+| Create invoice | POST | `/V1/invoices` | `201 Created` |
+| Get invoice by ID | GET | `/V1/invoices/:id` | `200 OK` |
+| Update invoice | PUT | `/V1/invoices/:id` | `200 OK` |
+| Partial update invoice | PATCH | `/V1/invoices/:id` | `200 OK` |
+| Delete invoice | DELETE | `/V1/invoices/:id` | `200` or `204` |
+| List invoices | GET | `/V1/invoices` | `200 OK`, empty or non-empty list |
+| Invalid invoice total | POST | `/V1/invoices` | `400` or `422` |
+| Missing authorization | GET | `/V1/invoices` | `401 Unauthorized` |
+
+The collection creates a dynamic invoice first and stores its `invoiceId` and `invoiceNumber` as environment variables. These values are reused by the GET, PUT, PATCH, and DELETE requests.
+
+---
+
 ## Key Automation Decisions
 
 ### Page Object Model
 
-The project uses Page Object Model to separate test logic from UI interaction logic.
+The E2E tests use Page Object Model to separate test logic from UI interaction logic.
 
 Example:
 
@@ -142,9 +189,37 @@ this.invoicesTable.locator('tbody tr').filter({
 
 ---
 
+### API Test Data
+
+The Postman collection also uses dynamic invoice numbers:
+
+```text
+API-DVD-{{$timestamp}}
+```
+
+This prevents invoice number collisions between API test executions.
+
+The first request creates an invoice and stores response data into Postman environment variables:
+
+```js
+pm.environment.set("invoiceId", json.id);
+pm.environment.set("invoiceNumber", json.invoiceNumber);
+```
+
+Those variables are reused by the following requests:
+
+```text
+GET /V1/invoices/{{invoiceId}}
+PUT /V1/invoices/{{invoiceId}}
+PATCH /V1/invoices/{{invoiceId}}
+DELETE /V1/invoices/{{invoiceId}}
+```
+
+---
+
 ### No Hard Waits
 
-The tests avoid fixed waits such as:
+The E2E tests avoid fixed waits such as:
 
 ```ts
 page.waitForTimeout(3000);
@@ -196,7 +271,7 @@ projects: [
 ]
 ```
 
-The suite runs with one worker:
+The E2E suite runs with one worker:
 
 ```ts
 workers: 1
@@ -246,19 +321,43 @@ ACCESS_CODE=your_access_code_here
 
 ## Running Tests
 
-Run all tests:
+### TypeScript Check
+
+Run TypeScript validation without generating output:
+
+```bash
+npm run typecheck
+```
+
+or:
+
+```bash
+npx tsc --noEmit
+```
+
+---
+
+### Run E2E Tests
+
+Run all Playwright E2E tests:
+
+```bash
+npm run test:e2e
+```
+
+Or directly:
 
 ```bash
 npx playwright test
 ```
 
-Run tests in headed mode:
+Run E2E tests in headed mode:
 
 ```bash
 npx playwright test --headed
 ```
 
-Run a specific test file:
+Run a specific E2E test file:
 
 ```bash
 npx playwright test tests/invoices.spec.ts
@@ -272,9 +371,38 @@ npx playwright test --ui
 
 ---
 
+### Run API Tests
+
+Run API tests with Newman:
+
+```bash
+ACCESS_CODE='your_access_code_here' npm run test:api
+```
+
+The API tests use:
+
+```text
+api/contalink-api.postman_collection.json
+api/contalink-api.postman_environment.json
+```
+
+The access code is passed as an environment variable and is not stored in the exported Postman environment file.
+
+---
+
+### Run All Tests
+
+Run E2E and API tests:
+
+```bash
+ACCESS_CODE='your_access_code_here' npm test
+```
+
+---
+
 ## HTML Report
 
-After running the tests, open the Playwright HTML report:
+After running the Playwright tests, open the Playwright HTML report:
 
 ```bash
 npx playwright show-report
@@ -284,15 +412,17 @@ The report includes test results, execution time, and failure artifacts when ava
 
 ---
 
-## Type Checking
+## Newman API Test Output
 
-Run TypeScript validation without generating output:
+When running API tests with Newman, the output includes:
 
-```bash
-npx tsc --noEmit
-```
+- Total requests executed
+- Total assertions executed
+- Failed assertions, if any
+- Average response time
+- Status code validation per request
 
-This helps detect TypeScript errors before execution.
+The API suite currently includes 8 requests and validates both happy path and edge cases.
 
 ---
 
@@ -313,40 +443,66 @@ It performs the following steps:
 - Install dependencies
 - Install Playwright browsers
 - Run TypeScript validation
-- Run Playwright tests
+- Run Playwright E2E tests
+- Run Postman API tests with Newman
 - Upload the Playwright HTML report as an artifact
 
-The pipeline fails with a non-zero exit code if any test fails.
+The pipeline fails with a non-zero exit code if any E2E or API test fails.
+
+The access code is injected in CI through a GitHub Actions secret:
+
+```text
+ACCESS_CODE
+```
 
 ---
 
 ## Test Data
 
-Invoice data is generated dynamically in:
+E2E invoice data is generated dynamically in:
 
 ```text
 test-data/invoice.data.ts
 ```
 
-The access code is provided through environment variables and is not stored in test data files.
+API invoice data is generated dynamically in the Postman collection using:
+
+```text
+{{$timestamp}}
+```
+
+The access code is provided through environment variables and is not stored in test data files or exported Postman files.
 
 ---
 
 ## Scenarios Implemented
 
-### Login
+### E2E - Login
 
 ```text
 should login successfully
 should logout successfully
 ```
 
-### Invoices
+### E2E - Invoices
 
 ```text
 should create a new invoice
 should edit an invoice
 should delete an invoice
+```
+
+### API - Invoices
+
+```text
+01 - POST invoice - 201
+02 - GET invoice by id - 200
+03 - PUT invoice - 200
+04 - PATCH invoice - 200
+05 - DELETE invoice - 200 or 204
+06 - GET invoices - 200
+07 - POST invoice invalid total - 400 or 422
+08 - GET invoices without authorization - 401
 ```
 
 ---
@@ -357,17 +513,24 @@ If more time were available, I would add:
 
 - Negative login validation
 - Required field validation for invoice creation
-- Additional filter tests by status and date
-- API setup/cleanup for faster and more isolated test data preparation
+- Additional UI filter tests by status and date
+- API setup/cleanup strategy for more isolated test data preparation
 - Cross-browser execution after stabilizing test data isolation
-- Session reuse with Playwright `storageState` if the suite grows and login becomes a bottleneck
+- Session reuse with Playwright `storageState` if the E2E suite grows and login becomes a bottleneck
 - More granular reporting with Allure
+- Newman HTML report generation for API tests
+- Optional performance testing with k6
 
 ---
 
 ## Notes
 
-The suite is intentionally focused on the most valuable E2E flows for the product: authentication and invoice CRUD operations.
+The suite is intentionally focused on the most valuable flows for the product:
+
+- Authentication
+- Invoice CRUD through UI
+- Invoice CRUD and validation through API
+- CI execution through GitHub Actions
 
 The tests are designed to be independent, use dynamic data, avoid hard waits, and interact with specific UI sections through scoped locators.
 
