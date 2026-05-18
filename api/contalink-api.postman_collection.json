@@ -110,21 +110,6 @@
         }
       ],
       "request": {
-        "auth": {
-          "type": "apikey",
-          "apikey": [
-            {
-              "key": "value",
-              "value": "{{accessCode}}",
-              "type": "string"
-            },
-            {
-              "key": "key",
-              "value": "authorization",
-              "type": "string"
-            }
-          ]
-        },
         "method": "GET",
         "header": [],
         "url": {
@@ -171,21 +156,6 @@
         }
       ],
       "request": {
-        "auth": {
-          "type": "apikey",
-          "apikey": [
-            {
-              "key": "value",
-              "value": "{{accessCode}}",
-              "type": "string"
-            },
-            {
-              "key": "key",
-              "value": "authorization",
-              "type": "string"
-            }
-          ]
-        },
         "method": "PUT",
         "header": [],
         "body": {
@@ -246,21 +216,6 @@
         }
       ],
       "request": {
-        "auth": {
-          "type": "apikey",
-          "apikey": [
-            {
-              "key": "value",
-              "value": "{{accessCode}}",
-              "type": "string"
-            },
-            {
-              "key": "key",
-              "value": "authorization",
-              "type": "string"
-            }
-          ]
-        },
         "method": "PATCH",
         "header": [],
         "body": {
